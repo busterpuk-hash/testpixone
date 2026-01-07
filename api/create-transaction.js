@@ -41,18 +41,42 @@ export default async function handler(req, res) {
 
     const data = await upstream.json().catch(() => null);
 
-    if (!upstream.ok) {
-      return res.status(upstream.status).json({
-        error: "PixOne error",
-        message: data?.message || data?.error || "Falha ao criar transação",
-        details: data
-      });
-    }
-
-    return res.status(200).json(data);
-  } catch (e) {
-    return res.status(500).json({ error: "server_error", message: String(e?.message || e) });
-  }
+if (!upstream.ok) {
+  return res.status(upstream.status).json({
+    error: "PixOne error",
+    message: data?.message || data?.error || "Falha ao criar transação",
+    details: data
+  });
 }
 
-/* MOHAMED | FREITASBOOK | NUNCAMEXA */
+// 🔥 NORMALIZAÇÃO: devolve sempre qrcodeText no topo
+const tx = data?.data || data;
+const pix = tx?.pix || data?.pix;
+
+const qrcodeText =
+  pix?.qrcodeText ||
+  pix?.qrcode_text ||
+  pix?.copyPaste ||
+  pix?.copy_paste ||
+  tx?.qrcodeText ||
+  tx?.qrcode_text ||
+  data?.qrcodeText ||
+  data?.qrcode_text ||
+  "";
+
+const secureUrl =
+  tx?.secureUrl ||
+  tx?.secure_url ||
+  data?.secureUrl ||
+  data?.secure_url ||
+  "";
+
+return res.status(200).json({
+  success: true,
+  qrcodeText,
+  secureUrl,
+  raw: data // mantém o retorno original pra debug
+});
+
+
+/* MOHAMED | FREITASBOOK | NUNCAMEXA 
