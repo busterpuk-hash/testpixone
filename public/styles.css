@@ -598,3 +598,19 @@ body{
   MOHAMED | FREITASBOOK
   NUNCAMEXA
 */
+
+
+/* Copia & Cola only (hide QR image) */
+.qrbox--hide{display:none !important;}
+
+.copyrow textarea{
+  min-height: 92px;
+  line-height: 1.35;
+  font-size: 12px;
+  padding: 12px 12px;
+}
+.copybtn{
+  display:grid;
+  place-items:center;
+  height: auto;
+}
