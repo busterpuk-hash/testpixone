@@ -200,27 +200,38 @@ async function createTransaction(){
   const payload = buildPayload();
 
   // Keys: prefer server env, but optionally send from UI for testing
-  const useEnv = els.useKeysFromEnv.checked;
-  const sk = els.sk.value.trim();
-  const pk = els.pk.value.trim();
-  const keyBlock = (!useEnv && (!sk || !pk)) ? 'Preencha sk/pk ou marque "Usar chaves do servidor"' : null;
-  if(keyBlock){ showToast(keyBlock); return; }
+const useEnv = els.useKeysFromEnv ? els.useKeysFromEnv.checked : true;
 
-  els.btnBuy.disabled = true;
-  els.btnBuy.textContent = "GERANDO PIX...";
+const sk = els.sk ? els.sk.value.trim() : "";
+const pk = els.pk ? els.pk.value.trim() : "";
 
-  try{
-    const res = await fetch("/api/create-transaction", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ payload, auth: useEnv ? null : { sk, pk } })
-    });
+const keyBlock = (!useEnv && (!sk || !pk))
+  ? 'Preencha sk/pk ou marque "Usar chaves do servidor"'
+  : null;
 
-    const data = await res.json().catch(()=>null);
-    if(!res.ok){
-      const msg = data?.message || data?.error || "Não foi possível gerar o Pix.";
-      throw new Error(msg);
-    }
+if(keyBlock){ showToast(keyBlock); return; }
+
+els.btnBuy.disabled = true;
+els.btnBuy.textContent = "GERANDO PIX...";
+
+try{
+  const body = {
+    payload,
+    ...(useEnv ? {} : { auth: { sk, pk } })
+  };
+
+  const res = await fetch("/api/create-transaction", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json().catch(()=>null);
+  if(!res.ok){
+    const msg = data?.message || data?.error || "Não foi possível gerar o Pix.";
+    throw new Error(msg);
+  }
+
 
     const t = data?.data || data;
     const qrcode = t?.pix?.qrcode;
