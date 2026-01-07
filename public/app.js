@@ -238,23 +238,35 @@ try{
     const qrcodeText = t?.pix?.qrcodeText;
     const secureUrl = t?.secureUrl;
 
-    if(!qrcode || !qrcodeText) throw new Error("Resposta sem QR Code. Verifique sua integração.");
+   // Normaliza resposta: aceita {data:{...}} ou {...}
+const tx = data?.data || data;
+const pix = tx?.pix || data?.pix;
 
-    els.qrImg.src = qrcode;
-    els.qrText.value = qrcodeText;
-    els.secureUrl.href = secureUrl || "#";
-    els.secureUrl.style.display = secureUrl ? "flex" : "none";
+// Pega SOMENTE o copia e cola
+const qrcodeText = pix?.qrcodeText || tx?.qrcodeText || data?.qrcodeText;
+const secureUrl = tx?.secureUrl || tx?.secure_url || data?.secureUrl || data?.secure_url;
 
-    openModal();
-    showToast("Pix gerado! Escaneie ou copie o código.");
-
-  }catch(e){
-    showToast(e.message || "Erro ao gerar Pix");
-  }finally{
-    els.btnBuy.disabled = false;
-    els.btnBuy.textContent = "COMPRAR";
-  }
+// Exige apenas o copia e cola
+if(!qrcodeText){
+  throw new Error("Pix copia e cola não retornado. Verifique sua integração.");
 }
+
+// Oculta QR Code em imagem (caso exista no HTML)
+if(els.qrImg){
+  els.qrImg.style.display = "none";
+}
+
+// Preenche o campo de copia e cola
+els.qrText.value = qrcodeText;
+
+// Link externo (opcional)
+els.secureUrl.href = secureUrl || "#";
+els.secureUrl.style.display = secureUrl ? "flex" : "none";
+
+// Abre modal
+openModal();
+showToast("Pix gerado! Copie e cole para pagar.");
+
 
 els.btnBuy.addEventListener('click', createTransaction);
 
