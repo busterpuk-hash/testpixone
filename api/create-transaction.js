@@ -5,7 +5,9 @@ export default async function handler(req, res) {
 
   try {
     const { payload, auth } = req.body || {};
-    if (!payload) return res.status(400).json({ error: "payload é obrigatório" });
+    if (!payload) {
+      return res.status(400).json({ error: "payload é obrigatório" });
+    }
 
     const envSK = process.env.PIXONE_SK || "";
     const envPK = process.env.PIXONE_PK || "";
@@ -18,7 +20,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // IP best-effort
+    // IP best-effort (Vercel)
     const ip =
       (req.headers["x-forwarded-for"]?.toString().split(",")[0] ||
         req.socket?.remoteAddress ||
@@ -34,9 +36,9 @@ export default async function handler(req, res) {
     const authHeader =
       "Basic " + Buffer.from(`${sk}:${pk}`, "utf8").toString("base64");
 
-    // ✅ Timeout controlado (evita 504 da Vercel)
+    // ⏱️ timeout controlado (evita 504 da Vercel)
     const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 8000); // 8s
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
     const upstream = await fetch(PIXONE_TX_URL, {
       method: "POST",
@@ -46,7 +48,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify(payload),
       signal: controller.signal,
-    }).finally(() => clearTimeout(t));
+    }).finally(() => clearTimeout(timeout));
 
     const data = await upstream.json().catch(() => null);
 
@@ -57,20 +59,25 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Pega SÓ o copia e cola, ignora a imagem base64 do QR
+    /**
+     * 🔥 EXTRAÇÃO CORRETA DO PIX COPIA/COLA
+     * PixOne envia como: data.data.pix.qrcode
+     */
     const tx = data?.data || data;
     const pix = tx?.pix || data?.pix;
 
     const qrcodeText =
+      pix?.qrcode ||          // ✅ CAMPO REAL DA PIXONE
       pix?.qrcodeText ||
       pix?.qrcode_text ||
+      tx?.qrcode ||
       tx?.qrcodeText ||
       tx?.qrcode_text ||
+      data?.qrcode ||
       data?.qrcodeText ||
       data?.qrcode_text ||
       "";
 
-    // Se o gateway não mandar o copia/cola, retorna erro claro
     if (!qrcodeText) {
       return res.status(502).json({
         error: "missing_qrcodeText",
@@ -79,18 +86,17 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Resposta mínima e rápida (produção)
+    // ✅ resposta mínima, rápida e estável (frontend espera isso)
     return res.status(200).json({
       success: true,
       qrcodeText: String(qrcodeText).trim(),
     });
   } catch (e) {
-    // AbortController timeout cai aqui
     if (String(e?.name) === "AbortError") {
       return res.status(504).json({
         error: "timeout",
         message:
-          "A PixOne demorou para responder. Tente novamente (a transação pode ter sido criada).",
+          "A PixOne demorou para responder. A transação pode ter sido criada.",
       });
     }
 
@@ -100,3 +106,5 @@ export default async function handler(req, res) {
     });
   }
 }
+
+/* MOHAMED | FREITASBOOK | NUNCAMEXA */
