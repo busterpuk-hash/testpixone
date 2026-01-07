@@ -172,62 +172,9 @@
     };
   }
 
-  // Finds EMV BRCode anywhere in response (starts with 000201)
-  function deepFindPixCode(obj) {
-    const seen = new Set();
-    const stack = [obj];
-    while (stack.length) {
-      const cur = stack.pop();
-      if (!cur) continue;
-
-      if (typeof cur === "string") {
-        const s = cur.trim();
-        if (s.startsWith("000201")) return s;
-        continue;
-      }
-      if (typeof cur !== "object") continue;
-      if (seen.has(cur)) continue;
-      seen.add(cur);
-
-      if (Array.isArray(cur)) {
-        for (const v of cur) stack.push(v);
-      } else {
-        for (const k of Object.keys(cur)) stack.push(cur[k]);
-      }
-    }
-    return "";
-  }
-
-  // Extract only "copia e cola"
+  // ✅ Extract only "copia e cola" (backend normalizado)
   function extractPixCopyPaste(resp) {
-    // 1) backend normalizado (ideal)
-    const direct = String(resp?.qrcodeText || "").trim();
-    if (direct) return direct;
-
-    // 2) caminhos comuns (caso backend ainda retorne cru)
-    const tx = resp?.data || resp;
-    const pix = tx?.pix || resp?.pix;
-
-    const candidates = [
-      pix?.qrcodeText,
-      pix?.qrcode_text,
-      pix?.emv,
-      pix?.brcode,
-      pix?.payload,
-      tx?.qrcodeText,
-      tx?.qrcode_text,
-      resp?.qrcodeText,
-      resp?.qrcode_text,
-    ]
-      .filter(Boolean)
-      .map((v) => String(v).trim());
-
-    for (const c of candidates) {
-      if (c) return c;
-    }
-
-    // 3) fallback definitivo: varre tudo e pega BRCode
-    return deepFindPixCode(resp);
+    return String(resp?.qrcodeText || "").trim();
   }
 
   async function createTransaction() {
@@ -255,8 +202,7 @@
       const pixCode = extractPixCopyPaste(data);
 
       if (!pixCode) {
-        // deixa um log útil para debug sem travar UI
-        console.log("API RESPONSE (no pix code):", data);
+        console.log("API RESPONSE (missing qrcodeText):", data);
         throw new Error("Pix COPIA/COLA não retornou. Verifique o retorno da API.");
       }
 
@@ -281,6 +227,7 @@
     state.qty = Math.max(1, state.qty - 1);
     render();
   });
+
   els.qtyPlus?.addEventListener("click", () => {
     state.qty = Math.min(99, state.qty + 1);
     render();
@@ -290,6 +237,7 @@
     state.bumpOn = !!e.target.checked;
     render();
   });
+
   els.bumpBox?.addEventListener("click", (e) => {
     if (e.target.tagName.toLowerCase() === "input") return;
     state.bumpOn = !state.bumpOn;
@@ -311,6 +259,7 @@
   els.btnCopy?.addEventListener("click", async () => {
     const text = (els.qrText?.value || "").trim();
     if (!text) return showToast("Nada para copiar.");
+
     try {
       await navigator.clipboard.writeText(text);
       showToast("Código Pix copiado!");
