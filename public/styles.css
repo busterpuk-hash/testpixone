@@ -600,17 +600,10 @@ body{
 */
 
 
-/* Copia & Cola only (hide QR image) */
-.qrbox--hide{display:none !important;}
+/* Production: remove secure link UI */
+.secureUrl{display:none !important;}
 
-.copyrow textarea{
+/* Production: ensure Pix code field is visible */
+#qrText{
   min-height: 92px;
-  line-height: 1.35;
-  font-size: 12px;
-  padding: 12px 12px;
-}
-.copybtn{
-  display:grid;
-  place-items:center;
-  height: auto;
 }
