@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Checkout • Pix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="./styles.css" />
+  <meta name="theme-color" content="#ffffff" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <button class="iconbtn" id="btnBack" aria-label="Voltar">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <div class="topbar__title">
+        <div class="topbar__kicker">Resumo do pedido</div>
+        <div class="topbar__safe">
+          <i class="fa-solid fa-shield-halved"></i>
+          Seus dados estão seguros e criptografados
+        </div>
+      </div>
+      <div class="topbar__spacer"></div>
+    </header>
+
+    <main class="card">
+      <!-- Loja -->
+      <section class="section">
+        <div class="row row--between row--center">
+          <div class="merchant">
+            <div class="merchant__name">Tiktok Shop</div>
+          </div>
+          <button class="linkbtn" type="button">
+            Adicionar nota <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- Produto -->
+      <section class="section section--product">
+        <div class="product">
+          <div class="product__imgwrap">
+            <img src="./assets/produto.webp" alt="Produto" class="product__img" />
+          </div>
+          <div class="product__info">
+            <div class="product__title">365 dias amor com Deus</div>
+
+            <div class="pill pill--hot">
+              Oferta Relâmpago <span class="pill__sep"></span>
+              <span id="countdown">06:00</span>
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+
+            <div class="subpill">
+              <i class="fa-solid fa-circle-check"></i>
+              Devoluções gratuitas em 30 dias
+            </div>
+
+            <div class="priceRow">
+              <div class="price">
+                <div class="price__now">R$ <span id="priceNow">37,90</span></div>
+                <div class="price__meta">
+                  <span class="price__old">R$ 79,89</span>
+                  <span class="badge">-40%</span>
+                </div>
+              </div>
+
+              <div class="qty">
+                <button class="qty__btn" id="qtyMinus" aria-label="Diminuir">
+                  <i class="fa-solid fa-minus"></i>
+                </button>
+                <div class="qty__val" id="qtyVal">1</div>
+                <button class="qty__btn" id="qtyPlus" aria-label="Aumentar">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cupom -->
+      <section class="section section--coupon" id="couponRow" role="button" tabindex="0">
+        <div class="row row--between row--center">
+          <div class="row row--center gap-10">
+            <span class="ticket" id="couponIcon"><i class="fa-solid fa-ticket"></i></span>
+            <div>
+              <div class="muted" id="couponTitle">Desconto do TikTok Shop</div>
+              <div class="couponSub" id="couponSub" style="display:none;">
+                Cupom aplicado <span class="couponPill">- R$ 2,00</span>
+              </div>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right muted" id="couponChevron"></i>
+        </div>
+      </section>
+
+      <!-- Resumo -->
+      <section class="section">
+        <div class="h2">Resumo do pedido</div>
+        <div class="summary">
+          <div class="summary__row">
+            <div class="muted">Subtotal</div>
+            <div class="money" id="subtotal">R$ 37,90</div>
+          </div>
+          <div class="summary__row">
+            <div class="row row--center gap-8 muted">
+              <span class="ticket ticket--sm"><i class="fa-solid fa-ticket"></i></span>
+              Descontos
+            </div>
+            <div class="money money--neg" id="discounts">- R$ 2,00</div>
+          </div>
+          <div class="summary__row summary__row--total">
+            <div class="h3">Total</div>
+            <div class="h3" id="totalTop">R$ 37,90</div>
+          </div>
+          <div class="note muted">Impostos inclusos</div>
+        </div>
+      </section>
+
+      <!-- Dados do cliente -->
+      <section class="section">
+        <div class="h2">Dados para pagamento</div>
+        <div class="formgrid">
+          <div class="field">
+            <label>Nome completo</label>
+            <input id="cName" placeholder="Seu nome" autocomplete="name" />
+          </div>
+          <div class="field">
+            <label>E-mail</label>
+            <input id="cEmail" placeholder="voce@email.com" autocomplete="email" inputmode="email" />
+          </div>
+          <div class="field">
+            <label>Telefone (DDD + número)</label>
+            <input id="cPhone" placeholder="11999999999" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label>CPF</label>
+            <input id="cCpf" placeholder="12345678909" inputmode="numeric" />
+          </div>
+        </div>
+      </section>
+
+
+      <!-- Orderbump (acima do método de pagamento) -->
+      <section class="section">
+        <div class="h2">Oferta extra</div>
+        <div class="bump" id="bumpBox">
+          <label class="bump__check">
+            <input type="checkbox" id="bumpToggle" />
+            <span class="bump__custom" aria-hidden="true"></span>
+          </label>
+          <div class="bump__imgwrap">
+            <img src="./assets/orderbump.jpg" alt="Bíblia leão de Judá" class="bump__img" />
+          </div>
+          <div class="bump__info">
+            <div class="bump__title">Bíblia leão de Judá</div>
+            <div class="bump__desc muted">Adicione ao seu pedido com desconto especial.</div>
+            <div class="bump__price">+ R$ <span id="bumpPrice">15,90</span></div>
+          </div>
+          <div class="bump__tag">Order Bump</div>
+        </div>
+      </section>
+
+      <!-- Método de pagamento -->
+      <section class="section">
+        <div class="h2">Forma de pagamento</div>
+        <div class="paymethod paymethod--selected">
+          <div class="paymethod__left">
+             <div class="pixlogo" aria-hidden="true" title="Pix">
+               <img src="./assets/logo-pix.png" alt="Pix" class="piximg" />
+              </div>
+            <div>
+              <div class="paymethod__title">Pix</div>
+              <div class="paymethod__subtitle muted">Pagamento instantâneo</div>
+            </div>
+          </div>
+          <div class="radio" aria-hidden="true"></div>
+        </div>
+
+        <div class="tiny muted">
+          Ao fazer um pedido, você concorda com Termos de uso e venda do TikTok Shop e reconhece que leu e concordou com a Política de privacidade do TikTok.
+        </div>
+      </section>
+
+      <!-- Footer CTA -->
+      <section class="section section--footer">
+        <div class="saving">
+          <i class="fa-regular fa-face-smile"></i>
+          Você está economizando neste pedido.
+        </div>
+
+        <div class="footerTotal">
+          <div class="muted">Total (1 item)</div>
+          <div class="h2" id="totalBottom">R$ 37,90</div>
+        </div>
+
+        <button class="cta" id="btnBuy">
+          <span>COMPRAR</span>
+        </button>
+        <div class="countdown muted">Oferta Relâmpago termina em <span id="countdown2">06:00</span></div>
+      </section>
+    </main>
+
+    <!-- Modal QR -->
+    <div class="modal" id="qrModal" aria-hidden="true">
+      <div class="modal__backdrop" id="modalClose"></div>
+      <div class="modal__sheet" role="dialog" aria-modal="true" aria-label="Pagamento Pix">
+        <div class="modal__head">
+          <div class="modal__title">Pague com Pix</div>
+          <button class="iconbtn" id="modalX" aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal__body">
+          <div class="qrbox">
+            <img id="qrImg" alt="QR Code Pix" />
+          </div>
+
+          <div class="field">
+            <label>Código Pix (copia e cola)</label>
+            <div class="copyrow">
+              <textarea id="qrText" rows="3" readonly></textarea>
+              <button class="copybtn" id="btnCopy" type="button">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+          </div>
+
+          <a class="secureUrl" id="secureUrl" target="_blank" rel="noopener">
+            Abrir link seguro <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
+
+          <div class="statusline" id="statusLine">
+            <span class="dot dot--yellow"></span>
+            <span>Aguardando pagamento...</span>
+          </div>
+
+          <div class="tiny muted">
+            Quando o pagamento for confirmado, você receberá a confirmação automaticamente (via webhook, se configurado).
+          </div>
+        </div>
+
+        <div class="modal__foot">
+          <button class="ghost" id="btnClose2" type="button">Fechar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
+
+
+    <!--  
+   
+
+    /*
+  ███╗   ███╗ ██████╗ ██╗  ██╗ █████╗ ███╗   ███╗███████╗██████╗ 
+  ████╗ ████║██╔═══██╗██║  ██║██╔══██╗████╗ ████║██╔════╝██╔══██╗
+  ██╔████╔██║██║   ██║███████║███████║██╔████╔██║█████╗  ██║  ██║
+  ██║╚██╔╝██║██║   ██║██╔══██║██╔══██║██║╚██╔╝██║██╔══╝  ██║  ██║
+  ██║ ╚═╝ ██║╚██████╔╝██║  ██║██║  ██║██║ ╚═╝ ██║███████╗██████╔╝
+  ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝╚═════╝
+
+  MOHAMED | FREITASBOOK
+  NUNCAMEXA
+*/
+        
+     -->

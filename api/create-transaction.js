@@ -5,9 +5,7 @@ export default async function handler(req, res) {
 
   try {
     const { payload, auth } = req.body || {};
-    if (!payload) {
-      return res.status(400).json({ error: "payload é obrigatório" });
-    }
+    if (!payload) return res.status(400).json({ error: "payload é obrigatório" });
 
     const envSK = process.env.PIXONE_SK || "";
     const envPK = process.env.PIXONE_PK || "";
@@ -16,7 +14,7 @@ export default async function handler(req, res) {
 
     if (!sk || !pk) {
       return res.status(400).json({
-        error: "Chaves ausentes: configure PIXONE_SK/PIXONE_PK na Vercel.",
+        error: "Chaves ausentes: configure PIXONE_SK/PIXONE_PK na Vercel (Environment Variables).",
       });
     }
 
@@ -33,12 +31,11 @@ export default async function handler(req, res) {
     payload.pix = payload.pix || { expiresInDays: 1 };
 
     const PIXONE_TX_URL = "https://api.pixone.com.br/api/v1/transactions";
-    const authHeader =
-      "Basic " + Buffer.from(`${sk}:${pk}`, "utf8").toString("base64");
+    const authHeader = "Basic " + Buffer.from(`${sk}:${pk}`, "utf8").toString("base64");
 
-    // ⏱️ timeout controlado (evita 504 da Vercel)
+    // Timeout controlado (evita 504 da Vercel em upstream lento)
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const t = setTimeout(() => controller.abort(), 8000);
 
     const upstream = await fetch(PIXONE_TX_URL, {
       method: "POST",
@@ -48,7 +45,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify(payload),
       signal: controller.signal,
-    }).finally(() => clearTimeout(timeout));
+    }).finally(() => clearTimeout(t));
 
     const data = await upstream.json().catch(() => null);
 
@@ -59,47 +56,49 @@ export default async function handler(req, res) {
       });
     }
 
-    /**
-     * 🔥 EXTRAÇÃO CORRETA DO PIX COPIA/COLA
-     * PixOne envia como: data.data.pix.qrcode
-     */
+    // Normalização: garantir que o frontend receba SEMPRE qrcodeText (Pix copia/cola)
     const tx = data?.data || data;
     const pix = tx?.pix || data?.pix;
 
+    const pick = (v) => (typeof v === "string" ? v.trim() : "");
     const qrcodeText =
-      pix?.qrcode ||          // ✅ CAMPO REAL DA PIXONE
-      pix?.qrcodeText ||
-      pix?.qrcode_text ||
-      tx?.qrcode ||
-      tx?.qrcodeText ||
-      tx?.qrcode_text ||
-      data?.qrcode ||
-      data?.qrcodeText ||
-      data?.qrcode_text ||
-      "";
+      pick(pix?.qrcodeText) ||
+      pick(pix?.qrcode_text) ||
+      // ⚠️ Em alguns retornos/webhook, o "copia e cola" vem em pix.qrcode (não é imagem)
+      (() => {
+        const q = pick(pix?.qrcode);
+        return q && q.startsWith("000201") ? q : "";
+      })() ||
+      pick(tx?.qrcodeText) ||
+      pick(tx?.qrcode_text) ||
+      (() => {
+        const q = pick(tx?.qrcode);
+        return q && q.startsWith("000201") ? q : "";
+      })();
 
     if (!qrcodeText) {
       return res.status(502).json({
         error: "missing_qrcodeText",
-        message:
-          "Transação criada, mas o Pix COPIA/COLA não veio no retorno da PixOne.",
+        message: "Transação criada, mas o Pix COPIA/COLA não veio no retorno da PixOne.",
+        // Dica de debug (não inclui base64 pesado)
+        hint: "Verifique se o retorno possui pix.qrcodeText ou se o copia/cola vem em pix.qrcode.",
       });
     }
 
-    // ✅ resposta mínima, rápida e estável (frontend espera isso)
     return res.status(200).json({
       success: true,
-      qrcodeText: String(qrcodeText).trim(),
+      qrcodeText,
+      // opcional: id para logs
+      transactionId: tx?.id ?? null,
+      status: tx?.status ?? null,
     });
   } catch (e) {
     if (String(e?.name) === "AbortError") {
       return res.status(504).json({
         error: "timeout",
-        message:
-          "A PixOne demorou para responder. A transação pode ter sido criada.",
+        message: "A PixOne demorou para responder. Tente novamente.",
       });
     }
-
     return res.status(500).json({
       error: "server_error",
       message: String(e?.message || e),
